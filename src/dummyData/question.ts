@@ -12,7 +12,7 @@ export const YESNO_QUESTION_LIST = [
       "Bé có phản ứng gì với âm thanh tần số cao như tiếng chuông không?",
     ],
     choices: ["Có", "Không", "Không rõ/Không hợp tác"],
-    audioPlayer: require("../../assets/images/AudioPlayerET.png"),
+    // audioPlayer: require("../../assets/images/AudioPlayerET.png"),
   },
   {
     questionId: "Q_2",
