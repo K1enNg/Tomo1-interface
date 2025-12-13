@@ -1,23 +1,24 @@
 export interface User {
     id: string;
     name: string;
-    email: string;
+    phoneNumber: string;
     role: 'child' | 'parent' | 'admin';
 }
 
 export interface LoginCredentials {
-    email: string;
+    phoneNumber: string;
     password: string;
     rememberMe?: boolean;
 }
 
 export interface RegisterData {
-    childName: string;
-    email: string;
+    childName?: string;
+    email?: string;
     password: string;
     confirmPassword: string;
-    parentName?: string;
-    parentPhone?: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
 }
 
 export interface AuthContextType {
@@ -28,3 +29,4 @@ export interface AuthContextType {
     logout: () => void;
     isLoading: boolean;
 }
+
