@@ -8,19 +8,22 @@ import {
     Alert,
     Grid,
 } from '@mui/material';
+import { register } from '../../../api/auth.ts';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../../components/layout/AuthLayout/AuthLayout';
 import Logo from '../../../components/common/Logo/Logo';
 
 const Register = () => {
     const navigate = useNavigate();
+
+    const [childName, setChildName] = useState('');
+    const [email, setEmail] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [formData, setFormData] = useState({
-        childName: '',
-        email: '',
         password: '',
-        confirmPassword: '',
-        parentName: '',
-        parentPhone: '',
+        firstName: '',
+        lastName: '',
+        phoneNumber: '',
     });
     const [error, setError] = useState('');
 
@@ -33,12 +36,12 @@ const Register = () => {
         setError('');
 
         // Validation
-        if (!formData.childName || !formData.email || !formData.password || !formData.confirmPassword) {
+        if (!formData.firstName || !formData.lastName || !formData.phoneNumber || !formData.password || !confirmPassword) {
             setError('Vui lòng điền đầy đủ thông tin bắt buộc');
             return;
         }
 
-        if (formData.password !== formData.confirmPassword) {
+        if (formData.password !== confirmPassword) {
             setError('Mật khẩu xác nhận không khớp');
             return;
         }
@@ -50,7 +53,7 @@ const Register = () => {
 
         // Mock registration - replace with actual API call
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await register(formData);
             console.log('Registration successful', formData);
             navigate('/signin');
         } catch (err) {
@@ -82,21 +85,27 @@ const Register = () => {
                     gap: 2.5,
                 }}
             >
+
                 <TextField
                     fullWidth
-                    label="Tên bé *"
-                    value={formData.childName}
-                    onChange={handleChange('childName')}
-                    autoFocus
+                    label="Họ phụ huynh"
+                    value={formData.lastName}
+                    onChange={handleChange('lastName')}
                 />
 
                 <TextField
                     fullWidth
-                    label="Email *"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange('email')}
-                    autoComplete="email"
+                    label="Tên phụ huynh"
+                    value={formData.firstName}
+                    onChange={handleChange('firstName')}
+                />
+
+                 <TextField
+                    fullWidth
+                    label="Số điện thoại phụ huynh"
+                    type="text"
+                    value={formData.phoneNumber}
+                    onChange={handleChange('phoneNumber')}
                 />
 
                 <Grid container spacing={2}>
@@ -110,35 +119,38 @@ const Register = () => {
                             autoComplete="new-password"
                         />
                     </Grid>
+
                     <Grid item xs={12} sm={6}>
                         <TextField
                             fullWidth
                             label="Xác nhận mật khẩu *"
                             type="password"
-                            value={formData.confirmPassword}
-                            onChange={handleChange('confirmPassword')}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
                             autoComplete="new-password"
                         />
                     </Grid>
                 </Grid>
 
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                {/* <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                     Thông tin phụ huynh (không bắt buộc)
-                </Typography>
+                </Typography> */}
 
                 <TextField
                     fullWidth
-                    label="Tên phụ huynh"
-                    value={formData.parentName}
-                    onChange={handleChange('parentName')}
-                />
+                    label="Tên bé *"
+                    value={childName}
+                    onChange={(e) => setChildName(e.target.value)}
+                    autoFocus
+                />  
 
                 <TextField
                     fullWidth
-                    label="Số điện thoại phụ huynh"
-                    type="tel"
-                    value={formData.parentPhone}
-                    onChange={handleChange('parentPhone')}
+                    label="Email *"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
                 />
 
                 <Button

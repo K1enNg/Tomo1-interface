@@ -9,13 +9,14 @@ import {
     Typography,
     Alert,
 } from '@mui/material';
+import { login } from '../../../api/auth.ts'; 
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../../components/layout/AuthLayout/AuthLayout';
 import Logo from '../../../components/common/Logo/Logo';
 
 const SignIn = () => {
     const navigate = useNavigate();
-    const [email, setEmail] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState('');
@@ -25,7 +26,7 @@ const SignIn = () => {
         setError('');
 
         // Basic validation
-        if (!email || !password) {
+        if (!phoneNumber || !password) {
             setError('Please fill in all fields');
             return;
         }
@@ -33,13 +34,13 @@ const SignIn = () => {
         // Mock authentication - replace with actual API call
         try {
             // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // For demo purposes, accept any email/password
-            console.log('Login successful', { email, rememberMe });
+            
+            await login({phoneNumber, password});
+            // For demo purposes, accept any phoneNumber/password
+            console.log('Login successful', { phoneNumber, rememberMe });
             navigate('/test/intro');
         } catch (err) {
-            setError('Invalid email or password');
+            setError('Mật Khẩu hay Số Điện Thoại không đúng. Vui lòng thử lại.');
         }
     };
 
@@ -69,11 +70,11 @@ const SignIn = () => {
             >
                 <TextField
                     fullWidth
-                    label="Email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
+                    label="Số điện thoại"
+                    type="phoneNumber"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    autoComplete="phoneNumber"
                     autoFocus
                 />
 
