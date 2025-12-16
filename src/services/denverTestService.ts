@@ -5,7 +5,7 @@ import type {
     DenverTestResult,
     ChildInfo,
 } from '../types/denver.types';
-import { getQuestionsForAge, DENVER_LANGUAGE_QUESTIONS } from '../dummyData/denverQuestions';
+import { DENVER_LANGUAGE_QUESTIONS } from '../dummyData/denverQuestions';
 import { calculateExactAge, createAgeFromMonths } from './ageCalculationService';
 
 /**
@@ -40,8 +40,9 @@ export function executeDenverTest(
     const ageMonths = chronologicalAge.totalMonths;
 
     // Get applicable questions for this age
+    // Get applicable questions for this age - MUST MATCH getQuestionsForAge logic
     const applicableQuestions = DENVER_LANGUAGE_QUESTIONS.filter(
-        (q) => ageMonths >= q.ageMonthMin
+        (q) => ageMonths >= q.ageMonthMin && ageMonths <= q.ageMonthMax
     ).sort((a, b) => b.ageMonthMax - a.ageMonthMax);
 
     // Track results and find stopping point
@@ -118,15 +119,15 @@ export function executeDenverTest(
         questionResults,
         stoppingPoint: stoppingPoint
             ? {
-                  questionId: stoppingPoint.questionId,
-                  question: stoppingPoint.text,
-                  mentalAgeMonths: stoppingPoint.ageMonthMax,
-              }
+                questionId: stoppingPoint.questionId,
+                question: stoppingPoint.text,
+                mentalAgeMonths: stoppingPoint.ageMonthMax,
+            }
             : {
-                  questionId: '',
-                  question: 'No stopping point reached',
-                  mentalAgeMonths: mentalAgeMonths,
-              },
+                questionId: '',
+                question: 'No stopping point reached',
+                mentalAgeMonths: mentalAgeMonths,
+            },
         testDate,
     };
 }

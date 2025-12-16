@@ -1,7 +1,7 @@
 import type { RouteObject } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import { authRoutes } from './authRoutes';
-import { testRoutes } from './testRoutes';
+import { denverRoutes } from './denverRoutes';
 
 export const routes: RouteObject[] = [
     {
@@ -9,7 +9,7 @@ export const routes: RouteObject[] = [
         element: <Navigate to="/signin" replace />,
     },
     ...authRoutes,
-    ...testRoutes,
+    ...denverRoutes,
     {
         path: '*',
         element: <Navigate to="/signin" replace />,
