@@ -1,32 +1,43 @@
-import { Box, Typography, Button, IconButton } from '@mui/material';
-import { Settings as SettingsIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import TestLayout from '../../../components/layout/TestLayout/TestLayout';
-import BirdMascot from '../../../components/mascot/BirdMascot/BirdMascot';
+import { Box, Typography, Button, IconButton } from "@mui/material";
+import { Settings as SettingsIcon } from "@mui/icons-material";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import TestLayout from "../../../components/layout/TestLayout/TestLayout";
+import BirdMascot from "../../../components/mascot/BirdMascot/BirdMascot";
 
 const TestIntro = () => {
     const navigate = useNavigate();
+    //
+    // const [searchParams] = useSearchParams();
+    // const childId = searchParams.get("childId") || "";
+    // const testType = searchParams.get("testType") || "yesno";
 
     const handleStartTest = () => {
-        navigate('/test/question/0');
+        navigate(`/test/question/0`);
+        //navigate(`/test/question/0?childId=${childId}&testType=${testType}`);
     };
 
     return (
         <TestLayout>
             <Box
                 sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                 }}
             >
-                <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
+                <Typography
+                    variant="h3"
+                    component="h1"
+                    sx={{ fontWeight: 700 }}
+                >
                     Khởi động ban đầu
                 </Typography>
                 <IconButton
                     sx={{
-                        backgroundColor: 'white',
-                        '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.9)' },
+                        backgroundColor: "white",
+                        "&:hover": {
+                            backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        },
                     }}
                 >
                     <SettingsIcon />
@@ -35,9 +46,9 @@ const TestIntro = () => {
 
             <Box
                 sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
                     gap: 4,
                     mt: 4,
                 }}
@@ -48,19 +59,20 @@ const TestIntro = () => {
                     variant="h5"
                     component="p"
                     sx={{
-                        textAlign: 'center',
+                        textAlign: "center",
                         maxWidth: 600,
                         px: 2,
                     }}
                 >
-                    Ba mẹ cùng con làm bài đánh giá nhỏ để chọn lớp học phù hợp nhé!
+                    Ba mẹ cùng con làm bài đánh giá nhỏ để chọn lớp học phù hợp
+                    nhé!
                 </Typography>
 
                 <Typography
                     variant="body1"
                     sx={{
-                        textAlign: 'center',
-                        color: 'text.secondary',
+                        textAlign: "center",
+                        color: "text.secondary",
                         maxWidth: 500,
                         px: 2,
                     }}
@@ -77,7 +89,7 @@ const TestIntro = () => {
                         mt: 2,
                         px: 6,
                         py: 2,
-                        fontSize: '1.25rem',
+                        fontSize: "1.25rem",
                     }}
                 >
                     Tiếp tục
