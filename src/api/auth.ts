@@ -1,12 +1,12 @@
-import type { RegisterData, LoginCredentials } from '../types/auth.types';
+import type { LoginCredentials } from '../types/auth.types';
 const url = import.meta.env.VITE_API_URL;
 
 
-interface RegisterPayload{
-    phoneNumber : string,
-    password: string,
-    firstName: string,
-    lastName: string
+interface RegisterPayload {
+  phoneNumber: string,
+  password: string,
+  firstName: string,
+  lastName: string
 }
 
 export async function login(payload: LoginCredentials) {
@@ -14,11 +14,11 @@ export async function login(payload: LoginCredentials) {
     `${url}/auth/login`,
     {
       method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
     }
   );
 

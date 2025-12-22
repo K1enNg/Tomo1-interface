@@ -3,11 +3,9 @@ import type { ReactNode } from 'react';
 
 interface TestLayoutProps {
     children: ReactNode;
-    showProgress?: boolean;
-    progressValue?: number;
 }
 
-const TestLayout = ({ children, showProgress = false, progressValue = 0 }: TestLayoutProps) => {
+const TestLayout = ({ children }: TestLayoutProps) => {
     return (
         <Box
             sx={{
