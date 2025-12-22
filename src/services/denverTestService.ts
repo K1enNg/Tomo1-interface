@@ -1,134 +1,61 @@
 import type {
-    DenverLanguageQuestion,
     ExactAge,
     DenverQuestionResult,
-    DenverTestResult,
-    ChildInfo,
 } from '../types/denver.types';
-import { DENVER_LANGUAGE_QUESTIONS } from '../dummyData/denverQuestions';
-import { calculateExactAge, createAgeFromMonths } from './ageCalculationService';
+import { startEntryTest, submitEntryTest } from '../api/denverQuestions';
 
 /**
- * Get the starting question index based on age
- * Returns the last (rightmost) question that the age line intersects
+ * Start the entry test process
  */
-export function getStartingQuestion(
-    ageMonths: number,
-    questions: DenverLanguageQuestion[]
-): DenverLanguageQuestion | null {
-    const applicableQuestions = questions.filter((q) => ageMonths >= q.ageMonthMin);
-
-    if (applicableQuestions.length === 0) return null;
-
-    // Return the last applicable question (highest ageMonthMax)
-    return applicableQuestions.reduce((latest, current) =>
-        current.ageMonthMax > latest.ageMonthMax ? current : latest
-    );
+export async function startDenverEntryTest(dob: string) {
+    const response = await startEntryTest(dob);
+    return {
+        questions: response.questions.map(q => ({
+            questionId: q.id,
+            text: q.text,
+            type: q.type,
+            options: q.options,
+            audio: q.audio,
+            ageMonthMin: 0,
+            ageMonthMax: 0,
+            category: 'receptive' as const
+        })),
+        ageRange: response.ageRange,
+        childAge: response.childAge
+    };
 }
 
 /**
- * Execute the Denver test algorithm
- * Identifies questions, asks them backward until 3 consecutive D results
+ * Submit the entry test results
  */
-export function executeDenverTest(
-    childInfo: ChildInfo,
-    answers: Map<string, 'D' | 'K'>,
-    testDate: Date = new Date()
-): DenverTestResult {
-    // Calculate exact age
-    const chronologicalAge = calculateExactAge(childInfo.dateOfBirth, testDate);
-    const ageMonths = chronologicalAge.totalMonths;
+export async function submitDenverEntryTest(dob: string, questionResults: DenverQuestionResult[]) {
+    const answers = questionResults.map(r => ({
+        questionId: r.questionId,
+        value: r.rawAnswer !== undefined ? r.rawAnswer : (r.result === 'D' ? true : false)
+    }));
 
-    // Get applicable questions for this age
-    // Get applicable questions for this age - MUST MATCH getQuestionsForAge logic
-    const applicableQuestions = DENVER_LANGUAGE_QUESTIONS.filter(
-        (q) => ageMonths >= q.ageMonthMin && ageMonths <= q.ageMonthMax
-    ).sort((a, b) => b.ageMonthMax - a.ageMonthMax);
+    const response = await submitEntryTest(dob, answers);
 
-    // Track results and find stopping point
-    const questionResults: DenverQuestionResult[] = [];
-    let consecutiveDCount = 0;
-    let stoppingPoint: DenverLanguageQuestion | null = null;
-    const processedQuestions = new Set<string>();
-
-    // Process questions from latest to earliest
-    for (const question of applicableQuestions) {
-        // Skip if already processed (duplicate handling)
-        if (processedQuestions.has(question.questionId)) {
-            const previousResult = questionResults.find((r) => r.questionId === question.questionId);
-            if (previousResult) {
-                questionResults.push({
-                    questionId: question.questionId,
-                    question: question.text,
-                    result: previousResult.result,
-                    isReused: true,
-                });
-                if (previousResult.result === 'D') {
-                    consecutiveDCount++;
-                } else {
-                    consecutiveDCount = 0;
-                }
-            }
-            continue;
-        }
-
-        processedQuestions.add(question.questionId);
-
-        // Get answer (default to 'D' if not answered)
-        const result = answers.get(question.questionId) || 'D';
-
-        questionResults.push({
-            questionId: question.questionId,
-            question: question.text,
-            result,
-            isReused: false,
-        });
-
-        // Track consecutive D results
-        if (result === 'D') {
-            consecutiveDCount++;
-            if (consecutiveDCount === 3) {
-                stoppingPoint = question;
-                break;
-            }
-        } else {
-            consecutiveDCount = 0;
-        }
-    }
-
-    // Determine mental age from stopping point
-    let mentalAgeMonths = 0;
-    if (stoppingPoint) {
-        mentalAgeMonths = stoppingPoint.ageMonthMax;
-    } else if (questionResults.length > 0) {
-        // If no stopping point, use age of last question asked
-        const lastQuestion = applicableQuestions[applicableQuestions.length - 1];
-        mentalAgeMonths = lastQuestion.ageMonthMax;
-    }
-
-    const mentalAge = createAgeFromMonths(mentalAgeMonths);
-
-    // Classify child into class level
-    const classLevel = classifyChildByAge(mentalAge);
-
+    // Map back to DenverTestResult for frontend compatibility
     return {
-        child: childInfo,
-        chronologicalAge,
-        mentalAge,
-        classLevel,
-        questionResults,
-        stoppingPoint: stoppingPoint
-            ? {
-                questionId: stoppingPoint.questionId,
-                question: stoppingPoint.text,
-                mentalAgeMonths: stoppingPoint.ageMonthMax,
-            }
-            : {
-                questionId: '',
-                question: 'No stopping point reached',
-                mentalAgeMonths: mentalAgeMonths,
-            },
-        testDate,
+        child: { name: '', dateOfBirth: new Date(dob) },
+        chronologicalAge: response.childAge,
+        mentalAge: response.mentalAge,
+        classLevel: classifyChildByAge(response.mentalAge),
+        questionResults: response.results.map(r => {
+            const originalQuestion = questionResults.find(q => q.questionId === r.questionId);
+            return {
+                questionId: r.questionId,
+                question: originalQuestion?.question || '',
+                result: r.result,
+                isReused: false,
+                rawAnswer: r.rawAnswer
+            };
+        }),
+        summary: response.summary,
+        ageRangeLabel: response.ageRange,
+        stoppingPoint: response.stoppingPoint,
+        testDate: new Date()
     };
 }
 
@@ -151,40 +78,18 @@ export function classifyChildByAge(mentalAge: ExactAge): 'Mầm' | 'Chồi' | 'L
 }
 
 /**
- * Get the next question to ask (going backward from starting point)
- */
-export function getNextQuestionToAsk(
-    currentIndex: number,
-    applicableQuestions: DenverLanguageQuestion[]
-): DenverLanguageQuestion | null {
-    if (currentIndex >= applicableQuestions.length - 1) {
-        return null;
-    }
-    return applicableQuestions[currentIndex + 1];
-}
-
-/**
- * Check if 3 consecutive D results have been reached
- */
-export function hasReachedStoppingPoint(results: DenverQuestionResult[]): boolean {
-    if (results.length < 3) return false;
-
-    const lastThree = results.slice(-3);
-    return lastThree.every((r) => r.result === 'D');
-}
-
-/**
  * Calculate test statistics
  */
-export function calculateTestStatistics(result: DenverTestResult): {
+export function calculateTestStatistics(result: any): {
     totalQuestionsAsked: number;
     passCount: number;
     failCount: number;
     passPercentage: number;
 } {
-    const totalQuestionsAsked = result.questionResults.length;
-    const passCount = result.questionResults.filter((r) => r.result === 'K').length;
-    const failCount = result.questionResults.filter((r) => r.result === 'D').length;
+    const results = result.questionResults || [];
+    const totalQuestionsAsked = results.length;
+    const passCount = results.filter((r: any) => r.result === 'D').length;
+    const failCount = results.filter((r: any) => r.result === 'K').length;
     const passPercentage = totalQuestionsAsked > 0 ? (passCount / totalQuestionsAsked) * 100 : 0;
 
     return {

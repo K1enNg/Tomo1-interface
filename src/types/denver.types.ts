@@ -29,8 +29,9 @@ export interface ExactAge {
 export interface DenverQuestionResult {
     questionId: string;
     question: string;
-    result: 'D' | 'K'; // D = Fail, K = Pass
+    result: 'D' | 'K'; // D = Pass, K = Fail
     isReused: boolean;
+    rawAnswer?: any;
 }
 
 export interface DenverTestResult {

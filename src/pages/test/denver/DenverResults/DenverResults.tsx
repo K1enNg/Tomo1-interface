@@ -271,9 +271,9 @@ const DenverResults = () => {
                                         </TableCell>
                                         <TableCell align="center">
                                             <Chip
-                                                label={qr.result === 'K' ? 'Đúng' : 'Sai'}
+                                                label={qr.result === 'D' ? 'Đúng' : 'Sai'}
                                                 size="small"
-                                                color={qr.result === 'K' ? 'success' : 'error'}
+                                                color={qr.result === 'D' ? 'success' : 'error'}
                                                 variant="outlined"
                                             />
                                         </TableCell>

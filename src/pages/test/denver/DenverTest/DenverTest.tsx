@@ -5,12 +5,9 @@ import { Settings as SettingsIcon } from '@mui/icons-material';
 import TestLayout from '../../../../components/layout/TestLayout/TestLayout';
 import ProgressBar from '../../../../components/test/ProgressBar/ProgressBar';
 import BirdMascot from '../../../../components/mascot/BirdMascot/BirdMascot';
-import type { ChildInfo, DenverLanguageQuestion, ExactAge } from '../../../../types/denver.types';
+import type { ChildInfo, DenverLanguageQuestion, ExactAge, DenverQuestionResult } from '../../../../types/denver.types';
 import { calculateExactAge } from '../../../../services/ageCalculationService';
-import {
-    getQuestionsForAge,
-} from '../../../../dummyData/denverQuestions';
-import { executeDenverTest } from '../../../../services/denverTestService';
+import { startDenverEntryTest, submitDenverEntryTest } from '../../../../services/denverTestService';
 
 const DenverTest = () => {
     const navigate = useNavigate();
@@ -28,25 +25,32 @@ const DenverTest = () => {
 
     // Initialize test on mount
     useEffect(() => {
-        const savedChildInfo = sessionStorage.getItem('denverChildInfo');
-        if (!savedChildInfo) {
-            navigate('/denver/intro');
-            return;
-        }
+        const initializeTest = async () => {
+            const savedChildInfo = sessionStorage.getItem('denverChildInfo');
+            if (!savedChildInfo) {
+                navigate('/denver/intro');
+                return;
+            }
 
-        const info = JSON.parse(savedChildInfo) as ChildInfo;
-        info.dateOfBirth = new Date(info.dateOfBirth);
-        setChildInfo(info);
+            const info = JSON.parse(savedChildInfo) as ChildInfo;
+            info.dateOfBirth = new Date(info.dateOfBirth);
+            setChildInfo(info);
 
-        // Calculate age
-        const age = calculateExactAge(info.dateOfBirth);
-        setChronologicalAge(age);
+            // Calculate age
+            const age = calculateExactAge(info.dateOfBirth);
+            setChronologicalAge(age);
 
-        // Get applicable questions (from highest age down)
-        const questions = getQuestionsForAge(age.totalMonths).sort(
-            (a, b) => b.ageMonthMax - a.ageMonthMax
-        );
-        setApplicableQuestions(questions);
+            // Start test via backend
+            try {
+                const response = await startDenverEntryTest(info.dateOfBirth.toISOString());
+                setApplicableQuestions(response.questions);
+            } catch (err) {
+                setError('Không thể khởi tạo bài kiểm tra. Vui lòng thử lại.');
+                console.error(err);
+            }
+        };
+
+        initializeTest();
     }, [navigate]);
 
     // Reset selection when changing questions
@@ -73,8 +77,10 @@ const DenverTest = () => {
             setConsecutiveFailures(0);
         }
 
-        // Check if we've reached the stopping point (3 consecutive D)
-        if (consecutiveFailures + 1 === 3 && result === 'D') {
+        // Check if we've reached the stopping point (3 consecutive K)
+        // User logic: "Execute each response... Evaluate... Store D/K"
+        // If 3 consecutive failures (K), stop.
+        if (consecutiveFailures + 1 === 3 && result === 'K') {
             completeTest(newAnswers);
             return;
         }
@@ -91,7 +97,7 @@ const DenverTest = () => {
     const handleMCQSubmit = () => {
         const question = applicableQuestions[currentQuestionIndex];
         const minCorrect = question.minCorrect || 1;
-        const result = selectedOptions.length >= minCorrect ? 'K' : 'D';
+        const result = selectedOptions.length >= minCorrect ? 'D' : 'K';
         handleAnswer(result);
     }
 
@@ -103,20 +109,28 @@ const DenverTest = () => {
         }
     };
 
-    const completeTest = (finalAnswers: Map<string, 'D' | 'K'>) => {
+    const completeTest = async (finalAnswers: Map<string, 'D' | 'K'>) => {
         if (!childInfo) return;
 
-        const result = executeDenverTest(childInfo, finalAnswers);
+        const results: DenverQuestionResult[] = applicableQuestions.map(q => ({
+            questionId: q.questionId,
+            question: q.text,
+            result: finalAnswers.get(q.questionId) || 'K',
+            isReused: false,
+            rawAnswer: q.type === 'multiple' ? undefined : (finalAnswers.get(q.questionId) === 'D')
+        }));
 
-        // Save result
-        sessionStorage.setItem('denverTestResult', JSON.stringify(result));
-
-        setIsTestComplete(true);
-
-        // Navigate to results after short delay
-        setTimeout(() => {
-            navigate('/denver/results');
-        }, 500);
+        try {
+            const result = await submitDenverEntryTest(childInfo.dateOfBirth.toISOString(), results);
+            // Save result
+            sessionStorage.setItem('denverTestResult', JSON.stringify(result));
+            setIsTestComplete(true);
+            setTimeout(() => {
+                navigate('/denver/results');
+            }, 500);
+        } catch (err) {
+            setError('Không thể nộp bài kiểm tra. Vui lòng thử lại.');
+        }
     };
 
     if (!childInfo || !chronologicalAge || applicableQuestions.length === 0) {
@@ -214,7 +228,7 @@ const DenverTest = () => {
                             <Button
                                 variant="outlined"
                                 size="large"
-                                onClick={() => handleAnswer('K')}
+                                onClick={() => handleAnswer('D')}
                                 sx={{ justifyContent: 'flex-start', textAlign: 'left', py: 2 }}
                             >
                                 ✓ Có (Pass)
@@ -222,7 +236,7 @@ const DenverTest = () => {
                             <Button
                                 variant="outlined"
                                 size="large"
-                                onClick={() => handleAnswer('D')}
+                                onClick={() => handleAnswer('K')}
                                 sx={{ justifyContent: 'flex-start', textAlign: 'left', py: 2 }}
                             >
                                 ✗ Không (Fail)
