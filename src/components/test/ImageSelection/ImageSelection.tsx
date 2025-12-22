@@ -48,7 +48,7 @@ const ImageSelection = ({ question, onAnswer, onSkip }: ImageSelectionProps) => 
 
             <Grid container spacing={2}>
                 {question.images.map((image) => (
-                    <Grid item xs={6} sm={4} key={image.id}>
+                    <Grid size={{ xs: 6, sm: 4 }} key={image.id}>
                         <Card
                             sx={{
                                 position: 'relative',

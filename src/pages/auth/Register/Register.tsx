@@ -100,7 +100,7 @@ const Register = () => {
                     onChange={handleChange('firstName')}
                 />
 
-                 <TextField
+                <TextField
                     fullWidth
                     label="Số điện thoại phụ huynh"
                     type="text"
@@ -109,7 +109,7 @@ const Register = () => {
                 />
 
                 <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             fullWidth
                             label="Mật khẩu *"
@@ -120,7 +120,7 @@ const Register = () => {
                         />
                     </Grid>
 
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             fullWidth
                             label="Xác nhận mật khẩu *"
@@ -142,7 +142,7 @@ const Register = () => {
                     value={childName}
                     onChange={(e) => setChildName(e.target.value)}
                     autoFocus
-                />  
+                />
 
                 <TextField
                     fullWidth
