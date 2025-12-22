@@ -9,7 +9,7 @@ import {
     Typography,
     Alert,
 } from '@mui/material';
-import { login } from '../../../api/auth.ts'; 
+import { login } from '../../../api/auth.ts';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../../components/layout/AuthLayout/AuthLayout';
 import Logo from '../../../components/common/Logo/Logo';
@@ -34,11 +34,11 @@ const SignIn = () => {
         // Mock authentication - replace with actual API call
         try {
             // Simulate API call
-            
-            await login({phoneNumber, password});
+
+            await login({ phoneNumber, password });
             // For demo purposes, accept any phoneNumber/password
             console.log('Login successful', { phoneNumber, rememberMe });
-            navigate('/test/intro');
+            navigate('/denver/intro');
         } catch (err) {
             setError('Mật Khẩu hay Số Điện Thoại không đúng. Vui lòng thử lại.');
         }
