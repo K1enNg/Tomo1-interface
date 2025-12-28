@@ -1,13 +1,33 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Card, CardContent, Button, IconButton, LinearProgress, Alert, Checkbox, FormControlLabel, FormGroup } from '@mui/material';
-import { Settings as SettingsIcon } from '@mui/icons-material';
+import { Settings as SettingsIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import TestLayout from '../../../../components/layout/TestLayout/TestLayout';
 import ProgressBar from '../../../../components/test/ProgressBar/ProgressBar';
 import BirdMascot from '../../../../components/mascot/BirdMascot/BirdMascot';
 import type { ChildInfo, DenverLanguageQuestion, ExactAge, DenverQuestionResult } from '../../../../types/denver.types';
 import { calculateExactAge } from '../../../../services/ageCalculationService';
 import { startDenverEntryTest, submitDenverEntryTest } from '../../../../services/denverTestService';
+
+import catImage from '../../../../assets/images/cat.png';
+import dogImage from '../../../../assets/images/dog.png';
+import birdImage from '../../../../assets/images/bird.png';
+import horseImage from '../../../../assets/images/horse.png';
+import girlImage from '../../../../assets/images/girl.png';
+
+const getImageSrc = (imagePath: string | undefined): string | undefined => {
+    if (!imagePath) return undefined;
+
+    const imageMap: Record<string, string> = {
+        '/images/cat.png': catImage,
+        '/images/dog.png': dogImage,
+        '/images/bird.png': birdImage,
+        '/images/horse.png': horseImage,
+        '/images/girl.png': girlImage,
+    };
+
+    return imageMap[imagePath] || imagePath;
+};
 
 const DenverTest = () => {
     const navigate = useNavigate();
@@ -16,14 +36,13 @@ const DenverTest = () => {
     const [applicableQuestions, setApplicableQuestions] = useState<DenverLanguageQuestion[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Map<string, 'D' | 'K'>>(new Map());
-    const [consecutiveFailures, setConsecutiveFailures] = useState(0);
+    const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
+    const [answeredQuestions, setAnsweredQuestions] = useState<Array<{ question: DenverLanguageQuestion; result: 'D' | 'K'; rawAnswer?: any }>>([]);
     const [isTestComplete, setIsTestComplete] = useState(false);
     const [error, setError] = useState('');
 
-    // State for MCQ selections
     const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
 
-    // Initialize test on mount
     useEffect(() => {
         const initializeTest = async () => {
             const savedChildInfo = sessionStorage.getItem('denverChildInfo');
@@ -36,11 +55,9 @@ const DenverTest = () => {
             info.dateOfBirth = new Date(info.dateOfBirth);
             setChildInfo(info);
 
-            // Calculate age
             const age = calculateExactAge(info.dateOfBirth);
             setChronologicalAge(age);
 
-            // Start test via backend
             try {
                 const response = await startDenverEntryTest(info.dateOfBirth.toISOString());
                 setApplicableQuestions(response.questions);
@@ -53,72 +70,100 @@ const DenverTest = () => {
         initializeTest();
     }, [navigate]);
 
-    // Reset selection when changing questions
     useEffect(() => {
         setSelectedOptions([]);
     }, [currentQuestionIndex]);
 
-    const handleAnswer = (result: 'D' | 'K') => {
+    const handleAnswer = (result: 'D' | 'K', rawAnswer?: any) => {
         if (currentQuestionIndex >= applicableQuestions.length) {
             return;
         }
 
         const question = applicableQuestions[currentQuestionIndex];
 
-        // Update answers
         const newAnswers = new Map(answers);
         newAnswers.set(question.questionId, result);
         setAnswers(newAnswers);
+        const newAnsweredQuestions = [...answeredQuestions, { question, result, rawAnswer }];
+        setAnsweredQuestions(newAnsweredQuestions);
 
-        // Track consecutive failures
+        let newConsecutiveCorrect = consecutiveCorrect;
         if (result === 'D') {
-            setConsecutiveFailures(consecutiveFailures + 1);
+            newConsecutiveCorrect = consecutiveCorrect + 1;
+            setConsecutiveCorrect(newConsecutiveCorrect);
         } else {
-            setConsecutiveFailures(0);
+            newConsecutiveCorrect = 0;
+            setConsecutiveCorrect(0);
         }
 
-        // Check if we've reached the stopping point (3 consecutive K)
-        // User logic: "Execute each response... Evaluate... Store D/K"
-        // If 3 consecutive failures (K), stop.
-        if (consecutiveFailures + 1 === 3 && result === 'K') {
+        if (newConsecutiveCorrect === 3) {
             completeTest(newAnswers);
             return;
         }
 
-        // Move to next question
         if (currentQuestionIndex < applicableQuestions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         } else {
-            // All questions asked
             completeTest(newAnswers);
         }
     };
+
 
     const handleMCQSubmit = () => {
         const question = applicableQuestions[currentQuestionIndex];
         const minCorrect = question.minCorrect || 1;
         const result = selectedOptions.length >= minCorrect ? 'D' : 'K';
-        handleAnswer(result);
+        handleAnswer(result, selectedOptions);
     }
 
-    const handleOptionToggle = (option: string) => {
-        if (selectedOptions.includes(option)) {
-            setSelectedOptions(selectedOptions.filter(o => o !== option));
+    const handleBack = () => {
+        if (currentQuestionIndex > 0) {
+            const newAnsweredQuestions = [...answeredQuestions];
+            const lastAnswered = newAnsweredQuestions.pop();
+
+            if (lastAnswered) {
+                setAnsweredQuestions(newAnsweredQuestions);
+
+                const newAnswers = new Map(answers);
+                newAnswers.delete(lastAnswered.question.questionId);
+                setAnswers(newAnswers);
+
+                // Recalculate consecutive correct
+                let newConsecutiveCorrect = 0;
+                // Iterate backwards through remaining answers to count consecutive 'D's
+                for (let i = newAnsweredQuestions.length - 1; i >= 0; i--) {
+                    if (newAnsweredQuestions[i].result === 'D') {
+                        newConsecutiveCorrect++;
+                    } else {
+                        break;
+                    }
+                }
+                setConsecutiveCorrect(newConsecutiveCorrect);
+            }
+            setCurrentQuestionIndex(currentQuestionIndex - 1);
+        }
+    };
+
+    const handleOptionToggle = (optionText: string) => {
+        if (selectedOptions.includes(optionText)) {
+            setSelectedOptions(selectedOptions.filter(o => o !== optionText));
         } else {
-            setSelectedOptions([...selectedOptions, option]);
+            setSelectedOptions([...selectedOptions, optionText]);
         }
     };
 
     const completeTest = async (finalAnswers: Map<string, 'D' | 'K'>) => {
         if (!childInfo) return;
 
-        const results: DenverQuestionResult[] = applicableQuestions.map(q => ({
-            questionId: q.questionId,
-            question: q.text,
-            result: finalAnswers.get(q.questionId) || 'K',
-            isReused: false,
-            rawAnswer: q.type === 'multiple' ? undefined : (finalAnswers.get(q.questionId) === 'D')
-        }));
+        const results: DenverQuestionResult[] = applicableQuestions
+            .filter(q => finalAnswers.has(q.questionId))
+            .map(q => ({
+                questionId: q.questionId,
+                question: q.text,
+                result: finalAnswers.get(q.questionId)!,
+                isReused: false,
+                rawAnswer: q.type === 'multiple' ? undefined : (finalAnswers.get(q.questionId) === 'D')
+            }));
 
         try {
             const result = await submitDenverEntryTest(childInfo.dateOfBirth.toISOString(), results);
@@ -202,18 +247,44 @@ const DenverTest = () => {
                                 (Chọn ít nhất {currentQuestion.minCorrect || 1} đáp án đúng)
                             </Typography>
                             <FormGroup>
-                                {currentQuestion.options.map((option, idx) => (
-                                    <FormControlLabel
-                                        key={idx}
-                                        control={
-                                            <Checkbox
-                                                checked={selectedOptions.includes(option)}
-                                                onChange={() => handleOptionToggle(option)}
+                                {currentQuestion.options.map((option, idx) => {
+                                    const isObject = typeof option !== 'string';
+                                    const text = isObject ? option.text : option;
+                                    const image = isObject ? option.image : undefined;
+                                    const imageSrc = getImageSrc(image);
+
+                                    return (
+                                        <Box key={idx} sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 2 }}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        checked={selectedOptions.includes(text)}
+                                                        onChange={() => handleOptionToggle(text)}
+                                                    />
+                                                }
+                                                label={text}
+                                                sx={{ flexGrow: 1 }}
                                             />
-                                        }
-                                        label={option}
-                                    />
-                                ))}
+                                            {imageSrc && (
+                                                <Box
+                                                    component="img"
+                                                    src={imageSrc}
+                                                    alt={text}
+                                                    sx={{
+                                                        width: 80,
+                                                        height: 80,
+                                                        objectFit: 'contain',
+                                                        borderRadius: 2,
+                                                        border: '2px solid',
+                                                        borderColor: 'divider',
+                                                        bgcolor: 'grey.50',
+                                                        p: 1
+                                                    }}
+                                                />
+                                            )}
+                                        </Box>
+                                    );
+                                })}
                             </FormGroup>
                             <Button
                                 variant="contained"
@@ -246,10 +317,37 @@ const DenverTest = () => {
                 </CardContent>
             </Card>
 
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 1, mb: 1 }}>
+                <Button
+                    disabled={currentQuestionIndex === 0}
+                    onClick={handleBack}
+                    variant="text"
+                    startIcon={<ArrowBackIcon />}
+                    sx={{ color: 'text.secondary' }}
+                >
+                    Quay lại
+                </Button>
+            </Box>
+
             <Box sx={{ textAlign: 'center', mt: 2 }}>
-                <Typography variant="caption" color="text.secondary">
-                    Lỗi liên tục: {consecutiveFailures} / 3
-                </Typography>
+                <Box
+                    sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        px: 2,
+                        py: 1,
+                        borderRadius: 2,
+                        backgroundColor: consecutiveCorrect > 0 ? 'rgba(255, 152, 0, 0.1)' : 'transparent',
+                        border: consecutiveCorrect > 0 ? '2px solid' : 'none',
+                        borderColor: consecutiveCorrect > 0 ? 'warning.main' : 'transparent',
+                    }}
+                >
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: consecutiveCorrect > 0 ? 'warning.dark' : 'text.secondary' }}>
+                        Liên tiếp đúng: {consecutiveCorrect} / 3
+                    </Typography>
+                    {consecutiveCorrect > 0 && <span style={{ fontSize: '1.2rem' }}>🔥</span>}
+                </Box>
             </Box>
 
             {isTestComplete && (

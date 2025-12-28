@@ -5,7 +5,7 @@ export interface DenverLanguageQuestion {
     ageMonthMax: number;
     category: 'receptive' | 'expressive';
     type?: 'yes-no' | 'multiple';
-    options?: string[];
+    options?: (string | { text: string; image?: string })[];
     minCorrect?: number;
     image?: string;
     audio?: string;
@@ -40,7 +40,7 @@ export interface DenverTestResult {
     mentalAge: ExactAge;
     classLevel: 'Mầm' | 'Chồi' | 'Lá';
     questionResults: DenverQuestionResult[];
-    stoppingPoint: {
+    stoppingPoint?: {
         questionId: string;
         question: string;
         mentalAgeMonths: number;
