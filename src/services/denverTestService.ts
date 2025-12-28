@@ -40,8 +40,8 @@ export async function submitDenverEntryTest(dob: string, questionResults: Denver
     return {
         child: { name: '', dateOfBirth: new Date(dob) },
         chronologicalAge: response.childAge,
-        mentalAge: response.mentalAge,
-        classLevel: classifyChildByAge(response.mentalAge),
+        mentalAge: response.developmentalAge,
+        classLevel: response.classification,
         questionResults: response.results.map(r => {
             const originalQuestion = questionResults.find(q => q.questionId === r.questionId);
             return {
@@ -63,21 +63,16 @@ export async function submitDenverEntryTest(dob: string, questionResults: Denver
     };
 }
 
-/**
- * Classify child into class level based on mental age
- * 1–2 years → Mầm
- * 2–3 years → Chồi
- * 3–4 years → Lá
- */
+
 export function classifyChildByAge(mentalAge: ExactAge): 'Mầm' | 'Chồi' | 'Lá' {
     const months = mentalAge.totalMonths;
 
     if (months < 24) {
-        return 'Mầm'; // 1-2 years
+        return 'Mầm';
     } else if (months < 36) {
-        return 'Chồi'; // 2-3 years
+        return 'Chồi';
     } else {
-        return 'Lá'; // 3+ years
+        return 'Lá';
     }
 }
 

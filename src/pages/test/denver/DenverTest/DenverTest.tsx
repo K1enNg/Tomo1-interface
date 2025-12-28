@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Card, CardContent, Button, IconButton, LinearProgress, Alert, Checkbox, FormControlLabel, FormGroup } from '@mui/material';
-import { Settings as SettingsIcon } from '@mui/icons-material';
+import { Settings as SettingsIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import TestLayout from '../../../../components/layout/TestLayout/TestLayout';
 import ProgressBar from '../../../../components/test/ProgressBar/ProgressBar';
 import BirdMascot from '../../../../components/mascot/BirdMascot/BirdMascot';
@@ -108,12 +108,41 @@ const DenverTest = () => {
         }
     };
 
+
     const handleMCQSubmit = () => {
         const question = applicableQuestions[currentQuestionIndex];
         const minCorrect = question.minCorrect || 1;
         const result = selectedOptions.length >= minCorrect ? 'D' : 'K';
         handleAnswer(result, selectedOptions);
     }
+
+    const handleBack = () => {
+        if (currentQuestionIndex > 0) {
+            const newAnsweredQuestions = [...answeredQuestions];
+            const lastAnswered = newAnsweredQuestions.pop();
+
+            if (lastAnswered) {
+                setAnsweredQuestions(newAnsweredQuestions);
+
+                const newAnswers = new Map(answers);
+                newAnswers.delete(lastAnswered.question.questionId);
+                setAnswers(newAnswers);
+
+                // Recalculate consecutive correct
+                let newConsecutiveCorrect = 0;
+                // Iterate backwards through remaining answers to count consecutive 'D's
+                for (let i = newAnsweredQuestions.length - 1; i >= 0; i--) {
+                    if (newAnsweredQuestions[i].result === 'D') {
+                        newConsecutiveCorrect++;
+                    } else {
+                        break;
+                    }
+                }
+                setConsecutiveCorrect(newConsecutiveCorrect);
+            }
+            setCurrentQuestionIndex(currentQuestionIndex - 1);
+        }
+    };
 
     const handleOptionToggle = (optionText: string) => {
         if (selectedOptions.includes(optionText)) {
@@ -287,6 +316,18 @@ const DenverTest = () => {
                     )}
                 </CardContent>
             </Card>
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 1, mb: 1 }}>
+                <Button
+                    disabled={currentQuestionIndex === 0}
+                    onClick={handleBack}
+                    variant="text"
+                    startIcon={<ArrowBackIcon />}
+                    sx={{ color: 'text.secondary' }}
+                >
+                    Quay lại
+                </Button>
+            </Box>
 
             <Box sx={{ textAlign: 'center', mt: 2 }}>
                 <Box

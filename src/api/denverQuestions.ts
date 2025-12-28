@@ -39,7 +39,9 @@ export interface DenverQuestionResultResponse {
 export interface DenverSubmitTestResponse {
     childAge: DenverAge;
     mentalAge: DenverAge;
+    developmentalAge: DenverAge;
     ageRange: string;
+    classification: 'Mầm' | 'Chồi' | 'Lá';
     results: DenverQuestionResultResponse[];
     stoppingPoint?: {
         questionId: string;
@@ -50,6 +52,7 @@ export interface DenverSubmitTestResponse {
         totalQuestions: number;
         passed: number;
         failed: number;
+        consecutivePasses: number;
     };
 }
 
