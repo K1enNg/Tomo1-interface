@@ -54,7 +54,11 @@ export async function submitDenverEntryTest(dob: string, questionResults: Denver
         }),
         summary: response.summary,
         ageRangeLabel: response.ageRange,
-        stoppingPoint: response.stoppingPoint,
+        stoppingPoint: response.stoppingPoint ? {
+            questionId: response.stoppingPoint.questionId,
+            question: response.stoppingPoint.text,
+            mentalAgeMonths: response.stoppingPoint.mentalAgeMonths
+        } : undefined,
         testDate: new Date()
     };
 }

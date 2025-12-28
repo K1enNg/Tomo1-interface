@@ -40,7 +40,7 @@ export interface DenverTestResult {
     mentalAge: ExactAge;
     classLevel: 'Mầm' | 'Chồi' | 'Lá';
     questionResults: DenverQuestionResult[];
-    stoppingPoint: {
+    stoppingPoint?: {
         questionId: string;
         question: string;
         mentalAgeMonths: number;

@@ -41,15 +41,15 @@ export interface DenverSubmitTestResponse {
     mentalAge: DenverAge;
     ageRange: string;
     results: DenverQuestionResultResponse[];
+    stoppingPoint?: {
+        questionId: string;
+        text: string;
+        mentalAgeMonths: number;
+    };
     summary: {
         totalQuestions: number;
         passed: number;
         failed: number;
-    };
-    stoppingPoint: {
-        questionId: string;
-        question: string;
-        mentalAgeMonths: number;
     };
 }
 

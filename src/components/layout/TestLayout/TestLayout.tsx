@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 
 interface TestLayoutProps {
     children: ReactNode;
+    showProgress?: boolean;
+    progressValue?: number;
 }
 
 const TestLayout = ({ children }: TestLayoutProps) => {
