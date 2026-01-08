@@ -47,7 +47,7 @@ const DenverResults = () => {
         // Clear session data
         sessionStorage.removeItem('denverChildInfo');
         sessionStorage.removeItem('denverTestResult');
-        navigate('/signin');
+        navigate('/home');
     };
 
     if (!result || !statistics) {
