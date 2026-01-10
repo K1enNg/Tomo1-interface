@@ -35,7 +35,21 @@ const SignIn = () => {
         try {
             // Simulate API call
 
-            await login({ phoneNumber, password });
+            const response = await login({ phoneNumber, password });
+
+            if (response?.access_token) {
+                sessionStorage.setItem('access_token', response.access_token);
+            }
+
+            if (Array.isArray(response?.children) && response.children.length > 0) {
+                const child = response.children[0];
+                if (child?.firstName && child?.dob) {
+                    sessionStorage.setItem('denverChildInfo', JSON.stringify({
+                        name: child.firstName,
+                        dateOfBirth: child.dob,
+                    }));
+                }
+            }
             // For demo purposes, accept any phoneNumber/password
             console.log('Login successful', { phoneNumber, rememberMe });
             navigate('/denver/intro');

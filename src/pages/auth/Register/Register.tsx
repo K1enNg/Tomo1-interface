@@ -17,7 +17,7 @@ const Register = () => {
     const navigate = useNavigate();
 
     const [childName, setChildName] = useState('');
-    const [email, setEmail] = useState('');
+    const [childDob, setChildDob] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [formData, setFormData] = useState({
         password: '',
@@ -41,6 +41,22 @@ const Register = () => {
             return;
         }
 
+        if (!childDob) {
+            setError('Vui lòng nhập ngày sinh của bé');
+            return;
+        }
+
+        const dobDate = new Date(childDob);
+        if (isNaN(dobDate.getTime()) || dobDate > new Date()) {
+            setError('Ngày sinh không hợp lệ');
+            return;
+        }
+
+        if (!childName.trim()) {
+            setError('Vui lòng nhập tên của bé');
+            return;
+        }
+
         if (formData.password !== confirmPassword) {
             setError('Mật khẩu xác nhận không khớp');
             return;
@@ -51,10 +67,17 @@ const Register = () => {
             return;
         }
 
-        // Mock registration - replace with actual API call
         try {
-            await register(formData);
-            console.log('Registration successful', formData);
+            const payload = {
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                phoneNumber: formData.phoneNumber,
+                password: formData.password,
+                childFirstName: childName.trim(),
+                childDob: new Date(childDob).toISOString(),
+            };
+            await register(payload);
+            console.log('Registration successful', payload);
             navigate('/signin');
         } catch (err) {
             setError('Đăng ký thất bại. Vui lòng thử lại.');
@@ -132,25 +155,25 @@ const Register = () => {
                     </Grid>
                 </Grid>
 
-                {/* <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Thông tin phụ huynh (không bắt buộc)
-                </Typography> */}
-
                 <TextField
                     fullWidth
                     label="Tên bé *"
                     value={childName}
                     onChange={(e) => setChildName(e.target.value)}
-                    autoFocus
                 />
 
+                
                 <TextField
                     fullWidth
-                    label="Email *"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
+                    label="Ngày sinh của bé *"
+                    type="date"
+                    value={childDob}
+                    onChange={(e) => setChildDob(e.target.value)}
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
+                    helperText="Để tính chính xác tuổi của bé"
+                    autoFocus
                 />
 
                 <Button

@@ -1,14 +1,24 @@
 import { Box, Typography, Button, IconButton, Card, CardContent, Link } from '@mui/material';
 import { Settings as SettingsIcon, Info as InfoIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import TestLayout from '../../../../components/layout/TestLayout/TestLayout';
 import BirdMascot from '../../../../components/mascot/BirdMascot/BirdMascot';
 
 const DenverIntro = () => {
     const navigate = useNavigate();
 
+    useEffect(() => {
+        if (!sessionStorage.getItem('denverChildInfo')) {
+            sessionStorage.setItem('denverChildInfo', JSON.stringify({
+                name: 'Bé',
+                dateOfBirth: new Date().toISOString(),
+            }));
+        }
+    }, []);
+
     const handleStartTest = () => {
-        navigate('/denver/child-info');
+        navigate('/denver/test');
     };
 
     return (

@@ -1,10 +1,7 @@
 import { Box, IconButton } from '@mui/material';
 import { Settings as SettingsIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 
 const Homepage = () => {
-    const navigate = useNavigate();
-
     const handleLessonClick = () => {
         // TODO: Navigate to lesson page when implemented
         // For now, this is a placeholder

@@ -6,7 +6,9 @@ interface RegisterPayload {
   phoneNumber: string,
   password: string,
   firstName: string,
-  lastName: string
+  lastName: string,
+  childFirstName: string,
+  childDob: string,
 }
 
 export async function login(payload: LoginCredentials) {
